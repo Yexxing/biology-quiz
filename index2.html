@@ -1,0 +1,263 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>生物学クイズチャレンジ</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg,#dceeff,#e4f9e8);
+  min-height: 100vh;
+  margin: 0;
+  padding: 30px 15px;
+  box-sizing: border-box;
+}
+.container {
+  background: white;
+  max-width: 600px;
+  margin: 30px auto;
+  padding: 30px;
+  border-radius: 18px;
+  box-shadow: 0 8px 25px rgba(0,0,0,.1);
+}
+h1 {text-align:center;color:#236e4b}
+.progress {color:#666}
+.bar {
+  background:#e5e7eb;
+  height:10px;
+  border-radius:10px;
+  overflow:hidden;
+  margin:20px 0;
+}
+.fill {
+  background:#22a06b;
+  height:100%;
+  width:0%;
+  transition:width .3s;
+}
+#question {
+  font-size:20px;
+  font-weight:bold;
+}
+.answer {
+  display:block;
+  width:100%;
+  padding:14px;
+  margin:10px 0;
+  border:2px solid #ddd;
+  background:#fafafa;
+  border-radius:9px;
+  text-align:left;
+  font-size:16px;
+  cursor:pointer;
+}
+.answer:hover:not(:disabled) {background:#e7f3ff}
+.answer.correct {
+  background:#d4f8df;
+  border-color:#20a455;
+}
+.answer.wrong {
+  background:#ffe0e0;
+  border-color:#dc3545;
+}
+#feedback {margin-top:20px;line-height:1.7}
+.action {
+  background:#237c55;
+  color:white;
+  border:none;
+  padding:13px 25px;
+  border-radius:8px;
+  font-size:16px;
+  cursor:pointer;
+  margin-top:20px;
+}
+.hidden {display:none}
+#result {text-align:center}
+</style>
+</head>
+<body>
+
+<div class="container">
+<h1>生物学クイズチャレンジ</h1>
+
+<div id="quiz">
+  <p class="progress" id="progress"></p>
+  <div class="bar">
+    <div class="fill" id="fill"></div>
+  </div>
+  <p id="question"></p>
+  <div id="answers"></div>
+  <div id="feedback" aria-live="polite"></div>
+  <button id="next" class="action hidden"
+    onclick="nextQuestion()">次の問題へ</button>
+</div>
+
+<div id="result" class="hidden">
+  <h2>クイズ終了！</h2>
+  <h3 id="score"></h3>
+  <p id="message"></p>
+  <button class="action" onclick="restart()">
+    もう一度挑戦
+  </button>
+</div>
+</div>
+
+<script>
+const questions = [
+{
+  q:"細胞呼吸によってATPを最も多く生成する細胞小器官は？",
+  a:["核","ミトコンドリア","リボソーム","ゴルジ体"],
+  c:1,
+  e:"ミトコンドリアは、好気呼吸によって大量のATPを生成します。"
+},
+{
+  q:"DNAの正式名称は何ですか？",
+  a:["デオキシリボ核酸","リボ核酸","アミノ酸","核タンパク質"],
+  c:0,
+  e:"DNAはデオキシリボ核酸と呼ばれ、遺伝情報を保存しています。"
+},
+{
+  q:"DNAにおいて、アデニンと対になる塩基は？",
+  a:["グアニン","シトシン","ウラシル","チミン"],
+  c:3,
+  e:"DNAではアデニンとチミン、グアニンとシトシンが対になります。"
+},
+{
+  q:"通常、遺伝的に同一な2つの娘細胞を生じる分裂は？",
+  a:["減数分裂","受精","体細胞分裂","乗換え"],
+  c:2,
+  e:"体細胞分裂では、通常、遺伝的に同一な2つの娘細胞ができます。"
+},
+{
+  q:"アミノ酸をリボソームへ運ぶRNAは？",
+  a:["DNA","mRNA","rRNA","tRNA"],
+  c:3,
+  e:"tRNAはタンパク質合成の際にアミノ酸を運びます。"
+},
+{
+  q:"ヒトの一般的な体細胞には染色体が何本ありますか？",
+  a:["23本","44本","46本","48本"],
+  c:2,
+  e:"ヒトの一般的な体細胞には23対、合計46本の染色体があります。"
+},
+{
+  q:"DNA複製で新しいDNA鎖を合成する酵素は？",
+  a:["DNAポリメラーゼ","RNAポリメラーゼ","アミラーゼ","プロテアーゼ"],
+  c:0,
+  e:"DNAポリメラーゼはヌクレオチドを結合して新しいDNA鎖を合成します。"
+},
+{
+  q:"カルビン回路は葉緑体のどこで行われますか？",
+  a:["ミトコンドリア基質","ストロマ","チラコイド内腔","細胞質"],
+  c:1,
+  e:"カルビン回路は葉緑体のストロマで行われます。"
+},
+{
+  q:"リボソームの主な働きは何ですか？",
+  a:["脂質の貯蔵","DNAの複製","タンパク質の合成","ATPの貯蔵"],
+  c:2,
+  e:"リボソームはmRNAの情報を読み取り、タンパク質を合成します。"
+},
+{
+  q:"細胞周期のうち、DNAが複製される時期は？",
+  a:["G1期","S期","G2期","M期"],
+  c:1,
+  e:"DNAの複製は間期のS期に行われます。"
+}
+];
+
+let current=0;
+let points=0;
+let answered=false;
+
+function showQuestion(){
+  answered=false;
+  const q=questions[current];
+
+  document.getElementById("progress").textContent=
+    `第${current+1}問 / 全${questions.length}問　得点：${points}`;
+
+  document.getElementById("fill").style.width=
+    `${current/questions.length*100}%`;
+
+  document.getElementById("question").textContent=q.q;
+  document.getElementById("feedback").textContent="";
+  document.getElementById("next").classList.add("hidden");
+
+  const area=document.getElementById("answers");
+  area.innerHTML="";
+
+  q.a.forEach((answer,i)=>{
+    const btn=document.createElement("button");
+    btn.className="answer";
+    btn.textContent=answer;
+    btn.onclick=()=>selectAnswer(i);
+    area.appendChild(btn);
+  });
+}
+
+function selectAnswer(selected){
+  if(answered)return;
+  answered=true;
+
+  const q=questions[current];
+  const correct=selected===q.c;
+  if(correct)points++;
+
+  document.querySelectorAll(".answer").forEach((btn,i)=>{
+    btn.disabled=true;
+    if(i===q.c)btn.classList.add("correct");
+    else if(i===selected)btn.classList.add("wrong");
+  });
+
+  document.getElementById("feedback").textContent=
+    (correct?"正解です！ ":"不正解です。 ")+q.e;
+
+  document.getElementById("progress").textContent=
+    `第${current+1}問 / 全${questions.length}問　得点：${points}`;
+
+  document.getElementById("next").textContent=
+    current===questions.length-1?"結果を見る":"次の問題へ";
+
+  document.getElementById("next").classList.remove("hidden");
+}
+
+function nextQuestion(){
+  current++;
+  if(current<questions.length)showQuestion();
+  else showResult();
+}
+
+function showResult(){
+  document.getElementById("quiz").classList.add("hidden");
+  document.getElementById("result").classList.remove("hidden");
+
+  document.getElementById("score").textContent=
+    `${questions.length}問中 ${points}問正解！`;
+
+  const rate=points/questions.length*100;
+  let msg;
+
+  if(rate===100)msg="満点です！素晴らしい！";
+  else if(rate>=70)msg="よくできました！";
+  else if(rate>=40)msg="もう少し頑張りましょう！";
+  else msg="復習して、もう一度挑戦しましょう！";
+
+  document.getElementById("message").textContent=msg;
+}
+
+function restart(){
+  current=0;
+  points=0;
+  answered=false;
+  document.getElementById("result").classList.add("hidden");
+  document.getElementById("quiz").classList.remove("hidden");
+  showQuestion();
+}
+
+showQuestion();
+</script>
+</body>
+</html>
