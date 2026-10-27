@@ -1,0 +1,47 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>生物学クイズ</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #eef5ff;
+      text-align: center;
+      padding: 40px 15px;
+    }
+    main {
+      background: white;
+      max-width: 450px;
+      margin: auto;
+      padding: 25px;
+      border-radius: 15px;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>生物学クイズ</h1>
+    <p>ATPを多く生成する細胞小器官は？</p>
+    <button onclick="check(false)">核</button>
+    <button onclick="check(true)">ミトコンドリア</button>
+    <button onclick="check(false)">リボソーム</button>
+    <p id="result"></p>
+  </main>
+  <script>
+    function check(correct) {
+      document.getElementById("result").textContent =
+        correct ? "正解です！" : "不正解です。もう一度！";
+    }
+  </script>
+</body>
+</html>
